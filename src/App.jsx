@@ -3,10 +3,12 @@ import { supabase } from './supabaseClient'
 import PixelCharacter from './PixelCharacter'
 import './index.css'
 
-const XP_PER_HABIT = 20
-const STREAK_BONUS = 5
+const XP_PER_HABIT    = 20
+const STREAK_BONUS    = 5
+const FREE_LIMIT      = 3
+const STRIPE_LINK     = 'https://buy.stripe.com/test_aFacN46o4elS2kudNT7Re00'
+const CAT_LABELS      = { health: 'Gesundheit', lernen: 'Lernen', mindset: 'Mindset', kreativ: 'Kreativ' }
 const LEVEL_THRESHOLDS = [0, 100, 250, 500, 900, 1500, 2500, 4000]
-const CAT_LABELS = { health: 'Gesundheit', lernen: 'Lernen', mindset: 'Mindset', kreativ: 'Kreativ' }
 
 // ── Auth Screen ───────────────────────────────────────────────────────────────
 function AuthScreen({ onAuth }) {
@@ -62,6 +64,63 @@ function AuthScreen({ onAuth }) {
   )
 }
 
+// ── Premium Banner ────────────────────────────────────────────────────────────
+function PremiumBanner({ onUpgrade }) {
+  return (
+    <div style={s.premiumBanner}>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8, color: '#633806', marginBottom: 4 }}>
+          GRATIS LIMIT ERREICHT
+        </div>
+        <div style={{ fontSize: 12, color: '#854F0B' }}>
+          Max. 3 Gewohnheiten gratis. Upgrade für unlimitierte Quests!
+        </div>
+      </div>
+      <button style={s.upgradeBtn} onClick={onUpgrade}>
+        4,99€/Mo ✦
+      </button>
+    </div>
+  )
+}
+
+// ── Premium Modal ─────────────────────────────────────────────────────────────
+function PremiumModal({ onClose, onUpgrade }) {
+  return (
+    <div style={s.modalOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{ ...s.modal, maxWidth: 400, textAlign: 'center' }}>
+        <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 14, color: '#BA7517', marginBottom: 8 }}>
+          PREMIUM
+        </div>
+        <div style={{ fontSize: 13, color: '#6b6a65', marginBottom: 20, lineHeight: 1.7 }}>
+          Schalte alle Features frei!
+        </div>
+
+        <div style={{ background: '#f5f4f0', borderRadius: 12, padding: '1rem', marginBottom: 20, textAlign: 'left' }}>
+          {[
+            '✦ Unlimitierte Gewohnheiten',
+            '✦ Premium Pixel-Charaktere',
+            '✦ Erweiterte Statistiken',
+            '✦ Streak-Schutz (kommt bald)',
+          ].map((f, i) => (
+            <div key={i} style={{ fontSize: 13, color: '#1a1a18', padding: '5px 0', borderBottom: i < 3 ? '0.5px solid rgba(0,0,0,0.06)' : 'none' }}>{f}</div>
+          ))}
+        </div>
+
+        <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 18, color: '#BA7517', marginBottom: 4 }}>
+          4,99€
+        </div>
+        <div style={{ fontSize: 11, color: '#6b6a65', marginBottom: 16 }}>pro Monat · jederzeit kündbar</div>
+
+        <button style={{ ...s.upgradeBtn, width: '100%', padding: 14, fontSize: 9, marginBottom: 8 }}
+          onClick={onUpgrade}>
+          JETZT UPGRADEN ✦
+        </button>
+        <button style={s.cancelBtn} onClick={onClose}>Vielleicht später</button>
+      </div>
+    </div>
+  )
+}
+
 // ── XPBar ─────────────────────────────────────────────────────────────────────
 function XPBar({ totalXP }) {
   const lvl    = LEVEL_THRESHOLDS.reduce((acc, t, i) => totalXP >= t ? i + 1 : acc, 1)
@@ -85,25 +144,44 @@ function XPBar({ totalXP }) {
 }
 
 // ── AddHabitForm ──────────────────────────────────────────────────────────────
-function AddHabitForm({ onAdd }) {
+function AddHabitForm({ onAdd, isPremium, habitCount }) {
   const [name, setName] = useState('')
   const [cat,  setCat]  = useState('health')
-  const handle = () => { if (!name.trim()) return; onAdd(name.trim(), cat); setName('') }
+  const atLimit = !isPremium && habitCount >= FREE_LIMIT
+
+  const handle = () => {
+    if (!name.trim()) return
+    if (atLimit) return
+    onAdd(name.trim(), cat)
+    setName('')
+  }
+
   return (
-    <div style={s.card}>
-      <div style={s.sectionTitle}>Neue Gewohnheit</div>
+    <div style={{ ...s.card, ...(atLimit ? { opacity: 0.6 } : {}) }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <div style={s.sectionTitle}>Neue Gewohnheit</div>
+        {!isPremium && (
+          <span style={{ fontSize: 11, color: habitCount >= FREE_LIMIT ? '#E24B4A' : '#6b6a65' }}>
+            {habitCount}/{FREE_LIMIT} gratis
+          </span>
+        )}
+      </div>
       <div style={{ display: 'flex', gap: 8 }}>
-        <input style={s.input} placeholder="z.B. 30 Min. lesen..." value={name}
-          maxLength={50} onChange={e => setName(e.target.value)}
+        <input style={s.input} placeholder={atLimit ? 'Upgrade für mehr Quests...' : 'z.B. 30 Min. lesen...'}
+          value={name} maxLength={50} disabled={atLimit}
+          onChange={e => setName(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handle()} />
-        <button style={s.addBtn} onClick={handle}>+ ADD</button>
+        <button style={{ ...s.addBtn, ...(atLimit ? { background: '#B4B2A9' } : {}) }}
+          onClick={handle} disabled={atLimit}>+ ADD</button>
       </div>
-      <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-        {Object.keys(CAT_LABELS).map(c => (
-          <button key={c} style={{ ...s.catBtn, ...(cat === c ? s.catBtnActive : {}) }}
-            onClick={() => setCat(c)}>{CAT_LABELS[c]}</button>
-        ))}
-      </div>
+      {!atLimit && (
+        <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
+          {Object.keys(CAT_LABELS).map(c => (
+            <button key={c} style={{ ...s.catBtn, ...(cat === c ? s.catBtnActive : {}) }}
+              onClick={() => setCat(c)}>{CAT_LABELS[c]}</button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -182,13 +260,15 @@ function HabitCard({ habit, onToggle, onDelete, onEdit }) {
 
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [user,           setUser]           = useState(null)
-  const [habits,         setHabits]         = useState([])
-  const [totalXP,        setTotalXP]        = useState(0)
-  const [loading,        setLoading]        = useState(true)
-  const [editingHabit,   setEditingHabit]   = useState(null)
-  const [justCompleted,  setJustCompleted]  = useState(false)
-  const [toast,          setToast]          = useState({ msg: '', show: false })
+  const [user,          setUser]          = useState(null)
+  const [habits,        setHabits]        = useState([])
+  const [totalXP,       setTotalXP]       = useState(0)
+  const [isPremium,     setIsPremium]     = useState(false)
+  const [loading,       setLoading]       = useState(true)
+  const [editingHabit,  setEditingHabit]  = useState(null)
+  const [showPremium,   setShowPremium]   = useState(false)
+  const [justCompleted, setJustCompleted] = useState(false)
+  const [toast,         setToast]         = useState({ msg: '', show: false })
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -201,7 +281,7 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  useEffect(() => { if (user) loadHabits() }, [user])
+  useEffect(() => { if (user) { loadHabits(); loadProfile() } }, [user])
 
   const loadHabits = async () => {
     const { data, error } = await supabase
@@ -214,12 +294,18 @@ export default function App() {
     }
   }
 
+  const loadProfile = async () => {
+    const { data } = await supabase.from('profiles').select('is_premium').eq('id', user.id).single()
+    if (data) setIsPremium(data.is_premium)
+  }
+
   const showToast = (msg) => {
     setToast({ msg, show: true })
     setTimeout(() => setToast(t => ({ ...t, show: false })), 2000)
   }
 
   const addHabit = async (name, cat) => {
+    if (!isPremium && habits.length >= FREE_LIMIT) { setShowPremium(true); return }
     const { data, error } = await supabase
       .from('habits').insert([{ name, cat, streak: 0, done: false, user_id: user.id }]).select()
     if (!error && data) { setHabits(prev => [...prev, data[0]]); showToast('Quest hinzugefügt!') }
@@ -255,8 +341,13 @@ export default function App() {
     if (!error) setHabits(prev => prev.map(h => h.id === id ? { ...h, name, cat } : h))
   }
 
+  const handleUpgrade = () => {
+    window.open(STRIPE_LINK, '_blank')
+    setShowPremium(false)
+  }
+
   const logout = async () => {
-    await supabase.auth.signOut(); setHabits([]); setTotalXP(0)
+    await supabase.auth.signOut(); setHabits([]); setTotalXP(0); setIsPremium(false)
   }
 
   if (loading) return (
@@ -280,17 +371,25 @@ export default function App() {
       <div style={s.header}>
         <div style={s.logo}>HabitQuest</div>
         <div style={s.tagline}>Verwandle deine Gewohnheiten in Abenteuer</div>
-        <button style={s.logoutBtn} onClick={logout}>Logout</button>
+        <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginTop: 8 }}>
+          {isPremium && (
+            <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 7, background: '#FAEEDA', color: '#BA7517', border: '0.5px solid #FAC775', borderRadius: 99, padding: '3px 8px' }}>
+              ✦ PREMIUM
+            </span>
+          )}
+          <button style={s.logoutBtn} onClick={logout}>Logout</button>
+        </div>
       </div>
 
       <XPBar totalXP={totalXP} />
-
-      {/* Pixel Character */}
       <PixelCharacter totalXP={totalXP} justCompleted={justCompleted} />
 
-      <div style={s.dateBanner}>{dateStr}</div>
+      {!isPremium && habits.length >= FREE_LIMIT && (
+        <PremiumBanner onUpgrade={() => setShowPremium(true)} />
+      )}
 
-      <AddHabitForm onAdd={addHabit} />
+      <div style={s.dateBanner}>{dateStr}</div>
+      <AddHabitForm onAdd={addHabit} isPremium={isPremium} habitCount={habits.length} />
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
         <div style={s.sectionTitle}>Heutige Quests</div>
@@ -314,10 +413,23 @@ export default function App() {
         </div>
       )}
 
+      {!isPremium && (
+        <div style={{ textAlign: 'center', marginTop: 20 }}>
+          <button style={{ ...s.upgradeBtn, padding: '10px 24px', fontSize: 8 }}
+            onClick={() => setShowPremium(true)}>
+            ✦ PREMIUM FREISCHALTEN
+          </button>
+        </div>
+      )}
+
       {editingHabit && (
         <EditModal habit={editingHabit}
           onSave={(name, cat) => { editHabit(editingHabit.id, name, cat); setEditingHabit(null) }}
           onClose={() => setEditingHabit(null)} />
+      )}
+
+      {showPremium && (
+        <PremiumModal onClose={() => setShowPremium(false)} onUpgrade={handleUpgrade} />
       )}
     </div>
   )
@@ -326,16 +438,19 @@ export default function App() {
 // ── Styles ────────────────────────────────────────────────────────────────────
 const s = {
   app:        { maxWidth: 520, margin: '0 auto' },
-  header:     { textAlign: 'center', marginBottom: '1.5rem', position: 'relative' },
+  header:     { textAlign: 'center', marginBottom: '1.5rem' },
   logo:       { fontFamily: "'Press Start 2P', monospace", fontSize: 20, color: '#BA7517' },
   tagline:    { fontSize: 12, color: '#6b6a65', marginTop: 6 },
   dateBanner: { textAlign: 'center', fontSize: 12, color: '#6b6a65', marginBottom: '0.75rem' },
-  logoutBtn:  { position: 'absolute', right: 0, top: 0, padding: '4px 10px', fontSize: 10, background: 'transparent', border: '0.5px solid rgba(0,0,0,0.15)', borderRadius: 8, cursor: 'pointer', color: '#6b6a65', fontFamily: 'Inter, sans-serif' },
+  logoutBtn:  { padding: '4px 10px', fontSize: 10, background: 'transparent', border: '0.5px solid rgba(0,0,0,0.15)', borderRadius: 8, cursor: 'pointer', color: '#6b6a65', fontFamily: 'Inter, sans-serif' },
 
   authWrap:  { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' },
   authCard:  { background: '#fff', border: '0.5px solid rgba(0,0,0,0.1)', borderRadius: 16, padding: '2rem', width: '100%', maxWidth: 380 },
   errorMsg:  { fontSize: 12, color: '#E24B4A', background: '#FCEBEB', border: '0.5px solid #F7C1C1', borderRadius: 8, padding: '8px 12px', marginBottom: 8 },
   switchBtn: { background: 'none', border: 'none', color: '#BA7517', fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif', textDecoration: 'underline' },
+
+  premiumBanner: { background: '#FAEEDA', border: '0.5px solid #FAC775', borderRadius: 12, padding: '12px 1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 12 },
+  upgradeBtn:    { padding: '8px 16px', background: '#BA7517', color: 'white', border: 'none', borderRadius: 8, fontFamily: "'Press Start 2P', monospace", fontSize: 7, cursor: 'pointer', whiteSpace: 'nowrap' },
 
   xpSection:  { background: '#fff', border: '0.5px solid rgba(0,0,0,0.1)', borderRadius: 12, padding: '1rem 1.25rem', marginBottom: '1rem' },
   xpTop:      { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 },
