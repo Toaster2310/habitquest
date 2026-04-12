@@ -3,12 +3,106 @@ import { supabase } from './supabaseClient'
 import PixelCharacter from './PixelCharacter'
 import './index.css'
 
-const XP_PER_HABIT    = 20
-const STREAK_BONUS    = 5
-const FREE_LIMIT      = 3
-const STRIPE_LINK     = 'https://buy.stripe.com/test_aFacN46o4elS2kudNT7Re00'
-const CAT_LABELS      = { health: 'Gesundheit', lernen: 'Lernen', mindset: 'Mindset', kreativ: 'Kreativ' }
+const XP_PER_HABIT     = 20
+const STREAK_BONUS     = 5
+const FREE_LIMIT       = 3
+const STRIPE_LINK      = 'https://buy.stripe.com/test_aFacN46o4elS2kudNT7Re00'
+const CAT_LABELS       = { health: 'Gesundheit', lernen: 'Lernen', mindset: 'Mindset', kreativ: 'Kreativ' }
 const LEVEL_THRESHOLDS = [0, 100, 250, 500, 900, 1500, 2500, 4000]
+const DAY_LABELS       = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
+
+// ── Weekly Calendar ───────────────────────────────────────────────────────────
+function WeekCalendar({ userId }) {
+  const [logs, setLogs] = useState([])
+
+  useEffect(() => {
+    if (!userId) return
+    const loadLogs = async () => {
+      const days = []
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date()
+        d.setDate(d.getDate() - i)
+        days.push(d.toISOString().split('T')[0])
+      }
+      const { data } = await supabase
+        .from('daily_logs')
+        .select('*')
+        .eq('user_id', userId)
+        .in('log_date', days)
+      setLogs(data || [])
+    }
+    loadLogs()
+  }, [userId])
+
+  const getDay = (offset) => {
+    const d = new Date()
+    d.setDate(d.getDate() - (6 - offset))
+    return d.toISOString().split('T')[0]
+  }
+
+  const today = new Date().toISOString().split('T')[0]
+
+  return (
+    <div style={s.card}>
+      <div style={s.sectionTitle}>Diese Woche</div>
+      <div style={{ display: 'flex', gap: 6, justifyContent: 'space-between' }}>
+        {DAY_LABELS.map((label, i) => {
+          const date    = getDay(i)
+          const log     = logs.find(l => l.log_date === date)
+          const pct     = log && log.total > 0 ? log.completed / log.total : 0
+          const isToday = date === today
+          const isDone  = pct >= 1 && log?.total > 0
+          const hasAny  = pct > 0
+
+          let bg = '#f5f4f0'
+          if (isDone)      bg = '#1D9E75'
+          else if (hasAny) bg = '#9FE1CB'
+
+          return (
+            <div key={i} style={{ flex: 1, textAlign: 'center' }}>
+              <div style={{
+                width: '100%',
+                aspectRatio: '1',
+                borderRadius: 8,
+                background: bg,
+                border: isToday ? '2px solid #BA7517' : '1px solid rgba(0,0,0,0.06)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 4,
+                fontSize: 10,
+                color: isDone ? 'white' : '#6b6a65',
+                fontFamily: isDone ? "'Press Start 2P', monospace" : 'Inter, sans-serif',
+                transition: 'all 0.3s',
+              }}>
+                {isDone ? '✓' : log?.completed || ''}
+              </div>
+              <div style={{
+                fontSize: 9,
+                color: isToday ? '#BA7517' : '#6b6a65',
+                fontWeight: isToday ? 600 : 400,
+              }}>
+                {label}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ display: 'flex', gap: 12, marginTop: 10, justifyContent: 'center' }}>
+        {[
+          { color: '#1D9E75', label: 'Alles erledigt' },
+          { color: '#9FE1CB', label: 'Teilweise' },
+          { color: '#f5f4f0', label: 'Kein Eintrag' },
+        ].map((item, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ width: 10, height: 10, borderRadius: 3, background: item.color, border: '1px solid rgba(0,0,0,0.08)' }} />
+            <span style={{ fontSize: 10, color: '#6b6a65' }}>{item.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 // ── Auth Screen ───────────────────────────────────────────────────────────────
 function AuthScreen({ onAuth }) {
@@ -89,12 +183,8 @@ function PremiumBanner({ onUpgrade }) {
   return (
     <div style={s.premiumBanner}>
       <div style={{ flex: 1 }}>
-        <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8, color: '#633806', marginBottom: 4 }}>
-          GRATIS LIMIT ERREICHT
-        </div>
-        <div style={{ fontSize: 12, color: '#854F0B' }}>
-          Max. 3 Gewohnheiten gratis. Upgrade für unlimitierte Quests!
-        </div>
+        <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8, color: '#633806', marginBottom: 4 }}>GRATIS LIMIT ERREICHT</div>
+        <div style={{ fontSize: 12, color: '#854F0B' }}>Max. 3 Gewohnheiten gratis. Upgrade für unlimitierte Quests!</div>
       </div>
       <button style={s.upgradeBtn} onClick={onUpgrade}>4,99€/Mo ✦</button>
     </div>
@@ -109,7 +199,7 @@ function PremiumModal({ onClose, onUpgrade }) {
         <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 14, color: '#BA7517', marginBottom: 8 }}>PREMIUM</div>
         <div style={{ fontSize: 13, color: '#6b6a65', marginBottom: 20, lineHeight: 1.7 }}>Schalte alle Features frei!</div>
         <div style={{ background: '#f5f4f0', borderRadius: 12, padding: '1rem', marginBottom: 20, textAlign: 'left' }}>
-          {['✦ Unlimitierte Gewohnheiten','✦ Premium Pixel-Charaktere','✦ Erweiterte Statistiken','✦ Streak-Schutz (kommt bald)'].map((f, i) => (
+          {['✦ Unlimitierte Gewohnheiten','✦ Premium Pixel-Charaktere','✦ Streak-Schutz','✦ Freunde einladen'].map((f, i) => (
             <div key={i} style={{ fontSize: 13, color: '#1a1a18', padding: '5px 0', borderBottom: i < 3 ? '0.5px solid rgba(0,0,0,0.06)' : 'none' }}>{f}</div>
           ))}
         </div>
@@ -289,52 +379,16 @@ export default function App() {
         longest_streak:  data.longest_streak  || 0,
         total_completed: data.total_completed || 0,
       })
-      await checkAndUpdateStreak(data)
     }
   }
 
-  const checkAndUpdateStreak = async (profile) => {
+  const updateDailyLog = async (habits) => {
     const today     = new Date().toISOString().split('T')[0]
-    const lastActive = profile.last_active
-
-    if (!lastActive) return
-
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    const yesterdayStr = yesterday.toISOString().split('T')[0]
-
-    if (lastActive !== today && lastActive !== yesterdayStr) {
-      await supabase.from('profiles').update({ current_streak: 0 }).eq('id', user.id)
-      setStats(prev => ({ ...prev, current_streak: 0 }))
-    }
-  }
-
-  const updateStats = async (completed) => {
-    const today = new Date().toISOString().split('T')[0]
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-    if (!profile) return
-
-    const lastActive    = profile.last_active
-    const isNewDay      = lastActive !== today
-    const newTotal      = (profile.total_completed || 0) + (completed ? 1 : -1)
-    const yesterday     = new Date(); yesterday.setDate(yesterday.getDate() - 1)
-    const yesterdayStr  = yesterday.toISOString().split('T')[0]
-    const wasYesterday  = lastActive === yesterdayStr
-
-    let newStreak = profile.current_streak || 0
-    if (completed && isNewDay) {
-      newStreak = wasYesterday ? newStreak + 1 : 1
-    }
-    const newLongest = Math.max(profile.longest_streak || 0, newStreak)
-
-    await supabase.from('profiles').update({
-      total_completed: Math.max(0, newTotal),
-      current_streak:  newStreak,
-      longest_streak:  newLongest,
-      last_active:     today,
-    }).eq('id', user.id)
-
-    setStats({ current_streak: newStreak, longest_streak: newLongest, total_completed: Math.max(0, newTotal) })
+    const completed = habits.filter(h => h.done).length
+    const total     = habits.length
+    await supabase.from('daily_logs').upsert({
+      user_id: user.id, log_date: today, completed, total
+    }, { onConflict: 'user_id,log_date' })
   }
 
   const showToast = (msg) => {
@@ -346,7 +400,12 @@ export default function App() {
     if (!isPremium && habits.length >= FREE_LIMIT) { setShowPremium(true); return }
     const { data, error } = await supabase
       .from('habits').insert([{ name, cat, streak: 0, done: false, user_id: user.id }]).select()
-    if (!error && data) { setHabits(prev => [...prev, data[0]]); showToast('Quest hinzugefügt!') }
+    if (!error && data) {
+      const newHabits = [...habits, data[0]]
+      setHabits(newHabits)
+      showToast('Quest hinzugefügt!')
+      await updateDailyLog(newHabits)
+    }
   }
 
   const toggleHabit = async (habit) => {
@@ -355,23 +414,38 @@ export default function App() {
     const earned    = XP_PER_HABIT + Math.min(habit.streak, 10) * STREAK_BONUS
     const { error } = await supabase.from('habits').update({ done: newDone, streak: newStreak }).eq('id', habit.id)
     if (!error) {
-      setHabits(prev => prev.map(h => h.id === habit.id ? { ...h, done: newDone, streak: newStreak } : h))
+      const newHabits = habits.map(h => h.id === habit.id ? { ...h, done: newDone, streak: newStreak } : h)
+      setHabits(newHabits)
       if (newDone) {
         setTotalXP(xp => xp + earned)
         setJustCompleted(true)
         setTimeout(() => setJustCompleted(false), 1000)
         showToast(`+${earned} XP earned!`)
-        await updateStats(true)
+        const newTotal = (stats.total_completed || 0) + 1
+        const today    = new Date().toISOString().split('T')[0]
+        const newStreak2 = stats.current_streak + 1
+        const newLongest = Math.max(stats.longest_streak, newStreak2)
+        await supabase.from('profiles').update({
+          total_completed: newTotal,
+          current_streak:  newStreak2,
+          longest_streak:  newLongest,
+          last_active:     today,
+        }).eq('id', user.id)
+        setStats({ current_streak: newStreak2, longest_streak: newLongest, total_completed: newTotal })
       } else {
         setTotalXP(xp => Math.max(0, xp - earned))
-        await updateStats(false)
       }
+      await updateDailyLog(newHabits)
     }
   }
 
   const deleteHabit = async (id) => {
     const { error } = await supabase.from('habits').delete().eq('id', id)
-    if (!error) setHabits(prev => prev.filter(h => h.id !== id))
+    if (!error) {
+      const newHabits = habits.filter(h => h.id !== id)
+      setHabits(newHabits)
+      await updateDailyLog(newHabits)
+    }
   }
 
   const editHabit = async (id, name, cat) => {
@@ -382,7 +456,8 @@ export default function App() {
   const handleUpgrade = () => { window.open(STRIPE_LINK, '_blank'); setShowPremium(false) }
 
   const logout = async () => {
-    await supabase.auth.signOut(); setHabits([]); setTotalXP(0); setIsPremium(false)
+    await supabase.auth.signOut()
+    setHabits([]); setTotalXP(0); setIsPremium(false)
     setStats({ current_streak: 0, longest_streak: 0, total_completed: 0 })
   }
 
@@ -417,6 +492,7 @@ export default function App() {
 
       <XPBar totalXP={totalXP} />
       <StatsPanel stats={stats} />
+      <WeekCalendar userId={user.id} />
       <PixelCharacter totalXP={totalXP} justCompleted={justCompleted} />
 
       {!isPremium && habits.length >= FREE_LIMIT && <PremiumBanner onUpgrade={() => setShowPremium(true)} />}
@@ -458,7 +534,6 @@ export default function App() {
           onSave={(name, cat) => { editHabit(editingHabit.id, name, cat); setEditingHabit(null) }}
           onClose={() => setEditingHabit(null)} />
       )}
-
       {showPremium && <PremiumModal onClose={() => setShowPremium(false)} onUpgrade={handleUpgrade} />}
     </div>
   )
@@ -474,9 +549,9 @@ const s = {
   backLink:   { position: 'absolute', left: 0, top: 0, fontSize: 11, color: '#6b6a65', textDecoration: 'none', fontFamily: 'Inter, sans-serif' },
   logoutBtn:  { padding: '4px 10px', fontSize: 10, background: 'transparent', border: '0.5px solid rgba(0,0,0,0.15)', borderRadius: 8, cursor: 'pointer', color: '#6b6a65', fontFamily: 'Inter, sans-serif' },
 
-  statCard:   { background: '#fff', border: '0.5px solid rgba(0,0,0,0.1)', borderRadius: 12, padding: '0.75rem', textAlign: 'center' },
-  statValue:  { fontFamily: "'Press Start 2P', monospace", fontSize: 14, fontWeight: 500, marginBottom: 4 },
-  statLabel:  { fontSize: 10, color: '#6b6a65' },
+  statCard:  { background: '#fff', border: '0.5px solid rgba(0,0,0,0.1)', borderRadius: 12, padding: '0.75rem', textAlign: 'center' },
+  statValue: { fontFamily: "'Press Start 2P', monospace", fontSize: 14, fontWeight: 500, marginBottom: 4 },
+  statLabel: { fontSize: 10, color: '#6b6a65' },
 
   authWrap:  { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' },
   authCard:  { background: '#fff', border: '0.5px solid rgba(0,0,0,0.1)', borderRadius: 16, padding: '2rem', width: '100%', maxWidth: 380, position: 'relative' },
