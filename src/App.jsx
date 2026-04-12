@@ -39,6 +39,7 @@ function AuthScreen({ onAuth }) {
   return (
     <div style={s.authWrap}>
       <div style={s.authCard}>
+        <a href="/landing.html" style={s.backLink}>← Zurück zur Startseite</a>
         <div style={s.logo}>HabitQuest</div>
         <div style={s.tagline}>Dein persönliches Quest-Tagebuch</div>
         <div style={{ marginTop: 24 }}>
@@ -64,6 +65,25 @@ function AuthScreen({ onAuth }) {
   )
 }
 
+// ── Stats Panel ───────────────────────────────────────────────────────────────
+function StatsPanel({ stats }) {
+  const items = [
+    { label: 'Tages-Streak',    value: stats.current_streak  + 'd', color: '#D85A30' },
+    { label: 'Bester Streak',   value: stats.longest_streak  + 'd', color: '#BA7517' },
+    { label: 'Gesamt erledigt', value: stats.total_completed + 'x', color: '#1D9E75' },
+  ]
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: '1rem' }}>
+      {items.map((item, i) => (
+        <div key={i} style={s.statCard}>
+          <div style={{ ...s.statValue, color: item.color }}>{item.value}</div>
+          <div style={s.statLabel}>{item.label}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ── Premium Banner ────────────────────────────────────────────────────────────
 function PremiumBanner({ onUpgrade }) {
   return (
@@ -76,9 +96,7 @@ function PremiumBanner({ onUpgrade }) {
           Max. 3 Gewohnheiten gratis. Upgrade für unlimitierte Quests!
         </div>
       </div>
-      <button style={s.upgradeBtn} onClick={onUpgrade}>
-        4,99€/Mo ✦
-      </button>
+      <button style={s.upgradeBtn} onClick={onUpgrade}>4,99€/Mo ✦</button>
     </div>
   )
 }
@@ -88,33 +106,16 @@ function PremiumModal({ onClose, onUpgrade }) {
   return (
     <div style={s.modalOverlay} onClick={e => e.target === e.currentTarget && onClose()}>
       <div style={{ ...s.modal, maxWidth: 400, textAlign: 'center' }}>
-        <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 14, color: '#BA7517', marginBottom: 8 }}>
-          PREMIUM
-        </div>
-        <div style={{ fontSize: 13, color: '#6b6a65', marginBottom: 20, lineHeight: 1.7 }}>
-          Schalte alle Features frei!
-        </div>
-
+        <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 14, color: '#BA7517', marginBottom: 8 }}>PREMIUM</div>
+        <div style={{ fontSize: 13, color: '#6b6a65', marginBottom: 20, lineHeight: 1.7 }}>Schalte alle Features frei!</div>
         <div style={{ background: '#f5f4f0', borderRadius: 12, padding: '1rem', marginBottom: 20, textAlign: 'left' }}>
-          {[
-            '✦ Unlimitierte Gewohnheiten',
-            '✦ Premium Pixel-Charaktere',
-            '✦ Erweiterte Statistiken',
-            '✦ Streak-Schutz (kommt bald)',
-          ].map((f, i) => (
+          {['✦ Unlimitierte Gewohnheiten','✦ Premium Pixel-Charaktere','✦ Erweiterte Statistiken','✦ Streak-Schutz (kommt bald)'].map((f, i) => (
             <div key={i} style={{ fontSize: 13, color: '#1a1a18', padding: '5px 0', borderBottom: i < 3 ? '0.5px solid rgba(0,0,0,0.06)' : 'none' }}>{f}</div>
           ))}
         </div>
-
-        <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 18, color: '#BA7517', marginBottom: 4 }}>
-          4,99€
-        </div>
+        <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 18, color: '#BA7517', marginBottom: 4 }}>4,99€</div>
         <div style={{ fontSize: 11, color: '#6b6a65', marginBottom: 16 }}>pro Monat · jederzeit kündbar</div>
-
-        <button style={{ ...s.upgradeBtn, width: '100%', padding: 14, fontSize: 9, marginBottom: 8 }}
-          onClick={onUpgrade}>
-          JETZT UPGRADEN ✦
-        </button>
+        <button style={{ ...s.upgradeBtn, width: '100%', padding: 14, fontSize: 9, marginBottom: 8 }} onClick={onUpgrade}>JETZT UPGRADEN ✦</button>
         <button style={s.cancelBtn} onClick={onClose}>Vielleicht später</button>
       </div>
     </div>
@@ -148,23 +149,12 @@ function AddHabitForm({ onAdd, isPremium, habitCount }) {
   const [name, setName] = useState('')
   const [cat,  setCat]  = useState('health')
   const atLimit = !isPremium && habitCount >= FREE_LIMIT
-
-  const handle = () => {
-    if (!name.trim()) return
-    if (atLimit) return
-    onAdd(name.trim(), cat)
-    setName('')
-  }
-
+  const handle = () => { if (!name.trim() || atLimit) return; onAdd(name.trim(), cat); setName('') }
   return (
     <div style={{ ...s.card, ...(atLimit ? { opacity: 0.6 } : {}) }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <div style={s.sectionTitle}>Neue Gewohnheit</div>
-        {!isPremium && (
-          <span style={{ fontSize: 11, color: habitCount >= FREE_LIMIT ? '#E24B4A' : '#6b6a65' }}>
-            {habitCount}/{FREE_LIMIT} gratis
-          </span>
-        )}
+        {!isPremium && <span style={{ fontSize: 11, color: habitCount >= FREE_LIMIT ? '#E24B4A' : '#6b6a65' }}>{habitCount}/{FREE_LIMIT} gratis</span>}
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
         <input style={s.input} placeholder={atLimit ? 'Upgrade für mehr Quests...' : 'z.B. 30 Min. lesen...'}
@@ -222,12 +212,10 @@ function HabitCard({ habit, onToggle, onDelete, onEdit }) {
   }[habit.cat] || {}
   return (
     <div style={{ ...s.habitCard, ...(habit.done ? s.habitCardDone : {}) }}>
-      <button style={{ ...s.checkBtn, ...(habit.done ? s.checkBtnChecked : {}) }}
-        onClick={() => onToggle(habit)}>
+      <button style={{ ...s.checkBtn, ...(habit.done ? s.checkBtnChecked : {}) }} onClick={() => onToggle(habit)}>
         {habit.done && (
           <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-            <path d="M2.5 7.5l4 4 6-6" stroke="white" strokeWidth="2.2"
-                  strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M2.5 7.5l4 4 6-6" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         )}
       </button>
@@ -242,15 +230,12 @@ function HabitCard({ habit, onToggle, onDelete, onEdit }) {
       <div style={{ display: 'flex', gap: 4 }}>
         <button style={s.iconBtn} onClick={() => onEdit(habit)}>
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-            <path d="M9 2l2 2-6.5 6.5H2.5V8L9 2z" stroke="currentColor"
-                  strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M9 2l2 2-6.5 6.5H2.5V8L9 2z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
-        <button style={{ ...s.iconBtn, ...s.iconBtnDel }}
-          onClick={() => { if (confirm('Löschen?')) onDelete(habit.id) }}>
+        <button style={{ ...s.iconBtn, ...s.iconBtnDel }} onClick={() => { if (confirm('Löschen?')) onDelete(habit.id) }}>
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-            <path d="M2 3.5h9M5.5 3.5V2.5h2v1M4 3.5l.5 7.5h4l.5-7.5"
-                  stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M2 3.5h9M5.5 3.5V2.5h2v1M4 3.5l.5 7.5h4l.5-7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
       </div>
@@ -264,6 +249,7 @@ export default function App() {
   const [habits,        setHabits]        = useState([])
   const [totalXP,       setTotalXP]       = useState(0)
   const [isPremium,     setIsPremium]     = useState(false)
+  const [stats,         setStats]         = useState({ current_streak: 0, longest_streak: 0, total_completed: 0 })
   const [loading,       setLoading]       = useState(true)
   const [editingHabit,  setEditingHabit]  = useState(null)
   const [showPremium,   setShowPremium]   = useState(false)
@@ -295,8 +281,60 @@ export default function App() {
   }
 
   const loadProfile = async () => {
-    const { data } = await supabase.from('profiles').select('is_premium').eq('id', user.id).single()
-    if (data) setIsPremium(data.is_premium)
+    const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+    if (data) {
+      setIsPremium(data.is_premium || false)
+      setStats({
+        current_streak:  data.current_streak  || 0,
+        longest_streak:  data.longest_streak  || 0,
+        total_completed: data.total_completed || 0,
+      })
+      await checkAndUpdateStreak(data)
+    }
+  }
+
+  const checkAndUpdateStreak = async (profile) => {
+    const today     = new Date().toISOString().split('T')[0]
+    const lastActive = profile.last_active
+
+    if (!lastActive) return
+
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    const yesterdayStr = yesterday.toISOString().split('T')[0]
+
+    if (lastActive !== today && lastActive !== yesterdayStr) {
+      await supabase.from('profiles').update({ current_streak: 0 }).eq('id', user.id)
+      setStats(prev => ({ ...prev, current_streak: 0 }))
+    }
+  }
+
+  const updateStats = async (completed) => {
+    const today = new Date().toISOString().split('T')[0]
+    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+    if (!profile) return
+
+    const lastActive    = profile.last_active
+    const isNewDay      = lastActive !== today
+    const newTotal      = (profile.total_completed || 0) + (completed ? 1 : -1)
+    const yesterday     = new Date(); yesterday.setDate(yesterday.getDate() - 1)
+    const yesterdayStr  = yesterday.toISOString().split('T')[0]
+    const wasYesterday  = lastActive === yesterdayStr
+
+    let newStreak = profile.current_streak || 0
+    if (completed && isNewDay) {
+      newStreak = wasYesterday ? newStreak + 1 : 1
+    }
+    const newLongest = Math.max(profile.longest_streak || 0, newStreak)
+
+    await supabase.from('profiles').update({
+      total_completed: Math.max(0, newTotal),
+      current_streak:  newStreak,
+      longest_streak:  newLongest,
+      last_active:     today,
+    }).eq('id', user.id)
+
+    setStats({ current_streak: newStreak, longest_streak: newLongest, total_completed: Math.max(0, newTotal) })
   }
 
   const showToast = (msg) => {
@@ -315,18 +353,18 @@ export default function App() {
     const newDone   = !habit.done
     const newStreak = newDone ? habit.streak + 1 : Math.max(0, habit.streak - 1)
     const earned    = XP_PER_HABIT + Math.min(habit.streak, 10) * STREAK_BONUS
-    const { error } = await supabase
-      .from('habits').update({ done: newDone, streak: newStreak }).eq('id', habit.id)
+    const { error } = await supabase.from('habits').update({ done: newDone, streak: newStreak }).eq('id', habit.id)
     if (!error) {
-      setHabits(prev => prev.map(h =>
-        h.id === habit.id ? { ...h, done: newDone, streak: newStreak } : h))
+      setHabits(prev => prev.map(h => h.id === habit.id ? { ...h, done: newDone, streak: newStreak } : h))
       if (newDone) {
         setTotalXP(xp => xp + earned)
         setJustCompleted(true)
         setTimeout(() => setJustCompleted(false), 1000)
         showToast(`+${earned} XP earned!`)
+        await updateStats(true)
       } else {
         setTotalXP(xp => Math.max(0, xp - earned))
+        await updateStats(false)
       }
     }
   }
@@ -341,24 +379,21 @@ export default function App() {
     if (!error) setHabits(prev => prev.map(h => h.id === id ? { ...h, name, cat } : h))
   }
 
-  const handleUpgrade = () => {
-    window.open(STRIPE_LINK, '_blank')
-    setShowPremium(false)
-  }
+  const handleUpgrade = () => { window.open(STRIPE_LINK, '_blank'); setShowPremium(false) }
 
   const logout = async () => {
     await supabase.auth.signOut(); setHabits([]); setTotalXP(0); setIsPremium(false)
+    setStats({ current_streak: 0, longest_streak: 0, total_completed: 0 })
   }
 
   if (loading) return (
-    <div style={{ textAlign: 'center', padding: '3rem', color: '#6b6a65',
-      fontFamily: "'Press Start 2P', monospace", fontSize: 10 }}>Loading...</div>
+    <div style={{ textAlign: 'center', padding: '3rem', color: '#6b6a65', fontFamily: "'Press Start 2P', monospace", fontSize: 10 }}>Loading...</div>
   )
   if (!user) return <AuthScreen onAuth={setUser} />
 
-  const done  = habits.filter(h => h.done).length
-  const total = habits.length
-  const pct   = total ? Math.round(done / total * 100) : 0
+  const done    = habits.filter(h => h.done).length
+  const total   = habits.length
+  const pct     = total ? Math.round(done / total * 100) : 0
   const today   = new Date()
   const days    = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag']
   const months  = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember']
@@ -369,24 +404,22 @@ export default function App() {
       <div style={{ ...s.toast, ...(toast.show ? s.toastShow : {}) }}>{toast.msg}</div>
 
       <div style={s.header}>
+        <a href="/landing.html" style={s.backLink}>← Startseite</a>
         <div style={s.logo}>HabitQuest</div>
         <div style={s.tagline}>Verwandle deine Gewohnheiten in Abenteuer</div>
         <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginTop: 8 }}>
           {isPremium && (
-            <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 7, background: '#FAEEDA', color: '#BA7517', border: '0.5px solid #FAC775', borderRadius: 99, padding: '3px 8px' }}>
-              ✦ PREMIUM
-            </span>
+            <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 7, background: '#FAEEDA', color: '#BA7517', border: '0.5px solid #FAC775', borderRadius: 99, padding: '3px 8px' }}>✦ PREMIUM</span>
           )}
           <button style={s.logoutBtn} onClick={logout}>Logout</button>
         </div>
       </div>
 
       <XPBar totalXP={totalXP} />
+      <StatsPanel stats={stats} />
       <PixelCharacter totalXP={totalXP} justCompleted={justCompleted} />
 
-      {!isPremium && habits.length >= FREE_LIMIT && (
-        <PremiumBanner onUpgrade={() => setShowPremium(true)} />
-      )}
+      {!isPremium && habits.length >= FREE_LIMIT && <PremiumBanner onUpgrade={() => setShowPremium(true)} />}
 
       <div style={s.dateBanner}>{dateStr}</div>
       <AddHabitForm onAdd={addHabit} isPremium={isPremium} habitCount={habits.length} />
@@ -407,16 +440,14 @@ export default function App() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {habits.map(h => (
-            <HabitCard key={h.id} habit={h} onToggle={toggleHabit}
-              onDelete={deleteHabit} onEdit={setEditingHabit} />
+            <HabitCard key={h.id} habit={h} onToggle={toggleHabit} onDelete={deleteHabit} onEdit={setEditingHabit} />
           ))}
         </div>
       )}
 
       {!isPremium && (
         <div style={{ textAlign: 'center', marginTop: 20 }}>
-          <button style={{ ...s.upgradeBtn, padding: '10px 24px', fontSize: 8 }}
-            onClick={() => setShowPremium(true)}>
+          <button style={{ ...s.upgradeBtn, padding: '10px 24px', fontSize: 8 }} onClick={() => setShowPremium(true)}>
             ✦ PREMIUM FREISCHALTEN
           </button>
         </div>
@@ -428,9 +459,7 @@ export default function App() {
           onClose={() => setEditingHabit(null)} />
       )}
 
-      {showPremium && (
-        <PremiumModal onClose={() => setShowPremium(false)} onUpgrade={handleUpgrade} />
-      )}
+      {showPremium && <PremiumModal onClose={() => setShowPremium(false)} onUpgrade={handleUpgrade} />}
     </div>
   )
 }
@@ -438,14 +467,19 @@ export default function App() {
 // ── Styles ────────────────────────────────────────────────────────────────────
 const s = {
   app:        { maxWidth: 520, margin: '0 auto' },
-  header:     { textAlign: 'center', marginBottom: '1.5rem' },
+  header:     { textAlign: 'center', marginBottom: '1.5rem', position: 'relative' },
   logo:       { fontFamily: "'Press Start 2P', monospace", fontSize: 20, color: '#BA7517' },
   tagline:    { fontSize: 12, color: '#6b6a65', marginTop: 6 },
   dateBanner: { textAlign: 'center', fontSize: 12, color: '#6b6a65', marginBottom: '0.75rem' },
+  backLink:   { position: 'absolute', left: 0, top: 0, fontSize: 11, color: '#6b6a65', textDecoration: 'none', fontFamily: 'Inter, sans-serif' },
   logoutBtn:  { padding: '4px 10px', fontSize: 10, background: 'transparent', border: '0.5px solid rgba(0,0,0,0.15)', borderRadius: 8, cursor: 'pointer', color: '#6b6a65', fontFamily: 'Inter, sans-serif' },
 
+  statCard:   { background: '#fff', border: '0.5px solid rgba(0,0,0,0.1)', borderRadius: 12, padding: '0.75rem', textAlign: 'center' },
+  statValue:  { fontFamily: "'Press Start 2P', monospace", fontSize: 14, fontWeight: 500, marginBottom: 4 },
+  statLabel:  { fontSize: 10, color: '#6b6a65' },
+
   authWrap:  { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' },
-  authCard:  { background: '#fff', border: '0.5px solid rgba(0,0,0,0.1)', borderRadius: 16, padding: '2rem', width: '100%', maxWidth: 380 },
+  authCard:  { background: '#fff', border: '0.5px solid rgba(0,0,0,0.1)', borderRadius: 16, padding: '2rem', width: '100%', maxWidth: 380, position: 'relative' },
   errorMsg:  { fontSize: 12, color: '#E24B4A', background: '#FCEBEB', border: '0.5px solid #F7C1C1', borderRadius: 8, padding: '8px 12px', marginBottom: 8 },
   switchBtn: { background: 'none', border: 'none', color: '#BA7517', fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif', textDecoration: 'underline' },
 
