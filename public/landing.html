@@ -1,635 +1,259 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HabitQuest – Verwandle Gewohnheiten in Abenteuer</title>
+  <title>HabitQuest – Turn your habits into adventures</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --amber:   #BA7517;
-      --amber-l: #FAEEDA;
-      --amber-m: #FAC775;
-      --teal:    #1D9E75;
-      --teal-l:  #E1F5EE;
-      --dark:    #1a1a18;
-      --mid:     #444441;
-      --muted:   #888780;
-      --bg:      #F5F3EE;
-      --white:   #ffffff;
+      --amber: #BA7517; --amber-l: #FAEEDA; --amber-m: #FAC775;
+      --teal: #1D9E75; --dark: #1a1a18; --mid: #444441; --muted: #888780;
+      --bg: #F5F3EE; --white: #ffffff;
     }
-
     html { scroll-behavior: smooth; }
-
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--bg);
-      color: var(--dark);
-      overflow-x: hidden;
-    }
-
-    /* ── Pixel grid background ── */
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--dark); overflow-x: hidden; }
     body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(186,117,23,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(186,117,23,0.04) 1px, transparent 1px);
-      background-size: 32px 32px;
-      pointer-events: none;
-      z-index: 0;
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(186,117,23,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(186,117,23,0.04) 1px, transparent 1px);
+      background-size: 32px 32px; pointer-events: none; z-index: 0;
     }
-
-    /* ── NAV ── */
     nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1rem 2rem;
-      background: rgba(245,243,238,0.85);
-      backdrop-filter: blur(12px);
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2rem; background: rgba(245,243,238,0.88); backdrop-filter: blur(12px);
       border-bottom: 1px solid rgba(186,117,23,0.12);
     }
-    .nav-logo {
-      font-family: 'Press Start 2P', monospace;
-      font-size: 13px;
-      color: var(--amber);
-    }
-    .nav-links { display: flex; gap: 2rem; align-items: center; }
-    .nav-links a {
-      font-size: 14px;
-      color: var(--mid);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-    .nav-links a:hover { color: var(--dark); }
-    .nav-cta {
-      background: var(--amber) !important;
-      color: white !important;
-      padding: 8px 18px;
-      border-radius: 8px;
-      font-weight: 500;
-      font-size: 14px !important;
-    }
+    .nav-logo { font-family: 'Press Start 2P', monospace; font-size: 13px; color: var(--amber); }
+    .nav-right { display: flex; gap: 1.5rem; align-items: center; }
+    .nav-right a { font-size: 14px; color: var(--mid); text-decoration: none; transition: color 0.2s; }
+    .nav-right a:hover { color: var(--dark); }
+    .nav-cta { background: var(--amber) !important; color: white !important; padding: 8px 18px; border-radius: 8px; font-weight: 500; }
+    .lang-switch { display: flex; gap: 3px; background: rgba(0,0,0,0.06); border-radius: 8px; padding: 3px; }
+    .lang-btn { padding: 3px 10px; border-radius: 6px; border: none; cursor: pointer; font-family: 'Press Start 2P', monospace; font-size: 7px; transition: all 0.15s; background: transparent; color: var(--muted); }
+    .lang-btn.active { background: var(--amber); color: white; }
 
-    /* ── SECTIONS ── */
     section { position: relative; z-index: 1; }
-
-    /* ── HERO ── */
-    .hero {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 8rem 2rem 4rem;
-    }
-
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--amber-l);
-      border: 1px solid var(--amber-m);
-      border-radius: 99px;
-      padding: 6px 16px;
-      font-family: 'Press Start 2P', monospace;
-      font-size: 8px;
-      color: var(--amber);
-      margin-bottom: 2rem;
-      animation: fadeUp 0.6s ease both;
-    }
-
-    .hero h1 {
-      font-family: 'DM Serif Display', serif;
-      font-size: clamp(3rem, 8vw, 6rem);
-      line-height: 1.05;
-      color: var(--dark);
-      max-width: 800px;
-      margin-bottom: 1.5rem;
-      animation: fadeUp 0.6s 0.1s ease both;
-    }
-    .hero h1 em {
-      font-style: italic;
-      color: var(--amber);
-    }
-
-    .hero-sub {
-      font-size: clamp(1rem, 2vw, 1.2rem);
-      color: var(--muted);
-      max-width: 520px;
-      line-height: 1.7;
-      margin-bottom: 2.5rem;
-      animation: fadeUp 0.6s 0.2s ease both;
-    }
-
-    .hero-btns {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      justify-content: center;
-      animation: fadeUp 0.6s 0.3s ease both;
-    }
-
-    .btn-primary {
-      background: var(--amber);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      padding: 14px 28px;
-      font-family: 'Press Start 2P', monospace;
-      font-size: 9px;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-block;
-      transition: transform 0.15s, background 0.15s;
-    }
+    .hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 8rem 2rem 4rem; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--amber-l); border: 1px solid var(--amber-m); border-radius: 99px; padding: 6px 16px; font-family: 'Press Start 2P', monospace; font-size: 8px; color: var(--amber); margin-bottom: 2rem; animation: fadeUp 0.6s ease both; }
+    .hero h1 { font-family: 'DM Serif Display', serif; font-size: clamp(3rem, 8vw, 6rem); line-height: 1.05; max-width: 800px; margin-bottom: 1.5rem; animation: fadeUp 0.6s 0.1s ease both; }
+    .hero h1 em { font-style: italic; color: var(--amber); }
+    .hero-sub { font-size: clamp(1rem, 2vw, 1.2rem); color: var(--muted); max-width: 520px; line-height: 1.7; margin-bottom: 2.5rem; animation: fadeUp 0.6s 0.2s ease both; }
+    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; animation: fadeUp 0.6s 0.3s ease both; }
+    .btn-primary { background: var(--amber); color: white; border: none; border-radius: 10px; padding: 14px 28px; font-family: 'Press Start 2P', monospace; font-size: 9px; cursor: pointer; text-decoration: none; display: inline-block; transition: transform 0.15s, background 0.15s; }
     .btn-primary:hover { background: #854F0B; transform: translateY(-2px); }
-
-    .btn-secondary {
-      background: transparent;
-      color: var(--dark);
-      border: 1.5px solid rgba(0,0,0,0.2);
-      border-radius: 10px;
-      padding: 14px 28px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-block;
-      transition: border-color 0.15s;
-    }
+    .btn-secondary { background: transparent; color: var(--dark); border: 1.5px solid rgba(0,0,0,0.2); border-radius: 10px; padding: 14px 28px; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; display: inline-block; transition: border-color 0.15s; }
     .btn-secondary:hover { border-color: var(--amber); color: var(--amber); }
 
-    /* ── PIXEL CHARACTER SHOWCASE ── */
-    .char-showcase {
-      display: flex;
-      justify-content: center;
-      gap: 2rem;
-      margin-top: 4rem;
-      flex-wrap: wrap;
-      animation: fadeUp 0.6s 0.4s ease both;
-    }
-    .char-card {
-      background: white;
-      border: 1px solid rgba(0,0,0,0.08);
-      border-radius: 16px;
-      padding: 1.5rem 1rem;
-      text-align: center;
-      width: 100px;
-      transition: transform 0.2s;
-    }
+    .char-showcase { display: flex; justify-content: center; gap: 2rem; margin-top: 4rem; flex-wrap: wrap; animation: fadeUp 0.6s 0.4s ease both; }
+    .char-card { background: white; border: 1px solid rgba(0,0,0,0.08); border-radius: 16px; padding: 1.5rem 1rem; text-align: center; width: 100px; transition: transform 0.2s; }
     .char-card:hover { transform: translateY(-6px); }
     .char-card.locked { opacity: 0.4; filter: grayscale(1); }
-    .char-name {
-      font-family: 'Press Start 2P', monospace;
-      font-size: 6px;
-      color: var(--muted);
-      margin-top: 8px;
-    }
-    .char-level {
-      font-size: 10px;
-      color: var(--amber);
-      margin-top: 4px;
-    }
+    .char-name { font-family: 'Press Start 2P', monospace; font-size: 6px; color: var(--muted); margin-top: 8px; }
+    .char-level { font-size: 10px; color: var(--amber); margin-top: 4px; }
 
-    /* ── HOW IT WORKS ── */
     .how { padding: 6rem 2rem; }
-    .section-label {
-      font-family: 'Press Start 2P', monospace;
-      font-size: 8px;
-      color: var(--amber);
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-bottom: 1rem;
-      text-align: center;
-    }
-    .section-title {
-      font-family: 'DM Serif Display', serif;
-      font-size: clamp(2rem, 4vw, 3rem);
-      text-align: center;
-      margin-bottom: 3rem;
-      line-height: 1.2;
-    }
-
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1.5rem;
-      max-width: 900px;
-      margin: 0 auto;
-    }
-    .step {
-      background: white;
-      border: 1px solid rgba(0,0,0,0.06);
-      border-radius: 16px;
-      padding: 2rem;
-      position: relative;
-      overflow: hidden;
-    }
-    .step::before {
-      content: attr(data-num);
-      position: absolute;
-      top: -10px;
-      right: 16px;
-      font-family: 'Press Start 2P', monospace;
-      font-size: 48px;
-      color: rgba(186,117,23,0.06);
-      line-height: 1;
-    }
-    .step-icon {
-      font-family: 'Press Start 2P', monospace;
-      font-size: 20px;
-      margin-bottom: 1rem;
-      display: block;
-    }
-    .step h3 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.3rem;
-      margin-bottom: 0.5rem;
-    }
+    .section-label { font-family: 'Press Start 2P', monospace; font-size: 8px; color: var(--amber); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 1rem; text-align: center; }
+    .section-title { font-family: 'DM Serif Display', serif; font-size: clamp(2rem, 4vw, 3rem); text-align: center; margin-bottom: 3rem; line-height: 1.2; }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; max-width: 900px; margin: 0 auto; }
+    .step { background: white; border: 1px solid rgba(0,0,0,0.06); border-radius: 16px; padding: 2rem; position: relative; overflow: hidden; }
+    .step::before { content: attr(data-num); position: absolute; top: -10px; right: 16px; font-family: 'Press Start 2P', monospace; font-size: 48px; color: rgba(186,117,23,0.06); line-height: 1; }
+    .step-icon { font-size: 20px; margin-bottom: 1rem; display: block; }
+    .step h3 { font-family: 'DM Serif Display', serif; font-size: 1.3rem; margin-bottom: 0.5rem; }
     .step p { font-size: 14px; color: var(--muted); line-height: 1.6; }
 
-    /* ── FEATURES ── */
     .features { padding: 6rem 2rem; background: var(--dark); }
     .features .section-title { color: white; }
     .features .section-label { color: var(--amber-m); }
-
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-      max-width: 900px;
-      margin: 0 auto;
-    }
-    .feature {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 16px;
-      padding: 2rem;
-      transition: background 0.2s;
-    }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; max-width: 900px; margin: 0 auto; }
+    .feature { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 2rem; transition: background 0.2s; }
     .feature:hover { background: rgba(255,255,255,0.08); }
-    .feature-icon {
-      font-family: 'Press Start 2P', monospace;
-      font-size: 16px;
-      margin-bottom: 1rem;
-      display: block;
-    }
+    .feature-icon { font-size: 16px; margin-bottom: 1rem; display: block; }
     .feature h3 { color: white; font-size: 1.1rem; font-weight: 500; margin-bottom: 0.5rem; }
-    .feature p  { color: rgba(255,255,255,0.5); font-size: 14px; line-height: 1.6; }
+    .feature p { color: rgba(255,255,255,0.5); font-size: 14px; line-height: 1.6; }
 
-    /* ── PRICING ── */
     .pricing { padding: 6rem 2rem; }
-    .pricing-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-      max-width: 700px;
-      margin: 0 auto;
-    }
-    .pricing-card {
-      background: white;
-      border: 1.5px solid rgba(0,0,0,0.08);
-      border-radius: 20px;
-      padding: 2.5rem 2rem;
-    }
-    .pricing-card.featured {
-      border-color: var(--amber);
-      position: relative;
-    }
-    .featured-badge {
-      position: absolute;
-      top: -12px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--amber);
-      color: white;
-      font-family: 'Press Start 2P', monospace;
-      font-size: 7px;
-      padding: 5px 12px;
-      border-radius: 99px;
-      white-space: nowrap;
-    }
-    .plan-name {
-      font-family: 'Press Start 2P', monospace;
-      font-size: 9px;
-      color: var(--muted);
-      margin-bottom: 1rem;
-    }
-    .plan-price {
-      font-family: 'DM Serif Display', serif;
-      font-size: 3rem;
-      color: var(--dark);
-      line-height: 1;
-      margin-bottom: 0.25rem;
-    }
+    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; max-width: 700px; margin: 0 auto; }
+    .pricing-card { background: white; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 20px; padding: 2.5rem 2rem; }
+    .pricing-card.featured { border-color: var(--amber); position: relative; }
+    .featured-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--amber); color: white; font-family: 'Press Start 2P', monospace; font-size: 7px; padding: 5px 12px; border-radius: 99px; white-space: nowrap; }
+    .plan-name { font-family: 'Press Start 2P', monospace; font-size: 9px; color: var(--muted); margin-bottom: 1rem; }
+    .plan-price { font-family: 'DM Serif Display', serif; font-size: 3rem; color: var(--dark); line-height: 1; margin-bottom: 0.25rem; }
     .plan-period { font-size: 13px; color: var(--muted); margin-bottom: 2rem; }
     .plan-features { list-style: none; margin-bottom: 2rem; }
-    .plan-features li {
-      font-size: 14px;
-      color: var(--mid);
-      padding: 6px 0;
-      border-bottom: 1px solid rgba(0,0,0,0.05);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .plan-features li { font-size: 14px; color: var(--mid); padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; gap: 8px; }
     .plan-features li::before { content: '✓'; color: var(--teal); font-weight: 700; }
     .plan-features li.locked::before { content: '✗'; color: #ccc; }
     .plan-features li.locked { color: #ccc; }
 
-    /* ── CTA ── */
-    .cta-section {
-      padding: 6rem 2rem;
-      text-align: center;
-      background: var(--amber-l);
-      border-top: 1px solid var(--amber-m);
-    }
-    .cta-section h2 {
-      font-family: 'DM Serif Display', serif;
-      font-size: clamp(2rem, 4vw, 3.5rem);
-      margin-bottom: 1rem;
-    }
-    .cta-section p {
-      font-size: 1.1rem;
-      color: var(--mid);
-      margin-bottom: 2rem;
-    }
+    .cta-section { padding: 6rem 2rem; text-align: center; background: var(--amber-l); border-top: 1px solid var(--amber-m); }
+    .cta-section h2 { font-family: 'DM Serif Display', serif; font-size: clamp(2rem, 4vw, 3.5rem); margin-bottom: 1rem; }
+    .cta-section p { font-size: 1.1rem; color: var(--mid); margin-bottom: 2rem; }
 
-    /* ── FOOTER ── */
-    footer {
-      padding: 2rem;
-      text-align: center;
-      font-size: 13px;
-      color: var(--muted);
-      border-top: 1px solid rgba(0,0,0,0.06);
-    }
+    footer { padding: 2rem; text-align: center; font-size: 13px; color: var(--muted); border-top: 1px solid rgba(0,0,0,0.06); }
 
-    /* ── ANIMATIONS ── */
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(24px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes idle {
-      0%,100% { transform: translateY(0); }
-      50%      { transform: translateY(-4px); }
-    }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes idle { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
     .idle { animation: idle 1.4s ease-in-out infinite; display: inline-block; }
+    @media (max-width: 600px) { .nav-right > a:not(.nav-cta) { display: none; } .char-showcase { gap: 1rem; } .char-card { width: 80px; padding: 1rem 0.5rem; } }
 
-    /* ── RESPONSIVE ── */
-    @media (max-width: 600px) {
-      .nav-links { display: none; }
-      .char-showcase { gap: 1rem; }
-      .char-card { width: 80px; padding: 1rem 0.5rem; }
-    }
+    [data-en], [data-de] { transition: opacity 0.2s; }
   </style>
 </head>
 <body>
 
-<!-- NAV -->
 <nav>
   <div class="nav-logo">HabitQuest</div>
-  <div class="nav-links">
-    <a href="#how">So funktioniert's</a>
+  <div class="nav-right">
+    <a href="#how" data-en="How it works" data-de="So funktioniert's">How it works</a>
     <a href="#features">Features</a>
-    <a href="#pricing">Preise</a>
-    <a href="https://habitquest-umber.vercel.app" class="nav-cta">App starten →</a>
+    <a href="#pricing" data-en="Pricing" data-de="Preise">Pricing</a>
+    <div class="lang-switch">
+      <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('de')">DE</button>
+    </div>
+    <a href="https://habitquest-umber.vercel.app" class="nav-cta" data-en="Start App →" data-de="App starten →">Start App →</a>
   </div>
 </nav>
 
-<!-- HERO -->
 <section class="hero">
-  <div class="hero-badge">✦ Jetzt kostenlos starten</div>
-  <h1>Gewohnheiten sind<br><em>dein größtes Abenteuer</em></h1>
-  <p class="hero-sub">
-    HabitQuest verwandelt deine täglichen Routinen in ein Rollenspiel.
-    Sammle XP, steige auf und werde zur Legende – eine Gewohnheit nach der anderen.
-  </p>
+  <div class="hero-badge" data-en="✦ Start for free today" data-de="✦ Jetzt kostenlos starten">✦ Start for free today</div>
+  <h1 data-en="Habits are<br><em>your greatest adventure</em>" data-de="Gewohnheiten sind<br><em>dein größtes Abenteuer</em>">Habits are<br><em>your greatest adventure</em></h1>
+  <p class="hero-sub" data-en="HabitQuest turns your daily routines into a role-playing game. Collect XP, level up and become a legend – one habit at a time." data-de="HabitQuest verwandelt deine täglichen Routinen in ein Rollenspiel. Sammle XP, steige auf und werde zur Legende – eine Gewohnheit nach der anderen.">HabitQuest turns your daily routines into a role-playing game. Collect XP, level up and become a legend – one habit at a time.</p>
   <div class="hero-btns">
-    <a href="https://habitquest-umber.vercel.app" class="btn-primary">QUEST STARTEN ▶</a>
-    <a href="#how" class="btn-secondary">Wie es funktioniert</a>
+    <a href="https://habitquest-umber.vercel.app" class="btn-primary" data-en="START QUEST ▶" data-de="QUEST STARTEN ▶">START QUEST ▶</a>
+    <a href="#how" class="btn-secondary" data-en="How it works" data-de="Wie es funktioniert">How it works</a>
   </div>
 
-  <!-- Character showcase -->
   <div class="char-showcase">
     <div class="char-card">
       <div class="idle">
-        <svg width="48" height="64" viewBox="0 0 48 64">
-          <rect x="14" y="1"  width="20" height="4"  rx="1" fill="#0C447C"/>
-          <rect x="14" y="3"  width="20" height="18" rx="3" fill="#F5C4B3"/>
-          <rect x="18" y="9"  width="4"  height="4"  rx="1" fill="#1a1a18"/>
-          <rect x="26" y="9"  width="4"  height="4"  rx="1" fill="#1a1a18"/>
-          <rect x="19" y="10" width="1"  height="1"  fill="white"/>
-          <rect x="27" y="10" width="1"  height="1"  fill="white"/>
-          <rect x="20" y="16" width="8"  height="2"  rx="1" fill="#D85A30"/>
-          <rect x="13" y="21" width="22" height="20" rx="2" fill="#378ADD"/>
-          <rect x="13" y="34" width="22" height="4"  fill="#0C447C"/>
-          <rect x="7"  y="21" width="7"  height="18" rx="3" fill="#378ADD"/>
-          <rect x="34" y="21" width="7"  height="18" rx="3" fill="#378ADD"/>
-          <rect x="14" y="41" width="9"  height="18" rx="2" fill="#2C2C2A"/>
-          <rect x="25" y="41" width="9"  height="18" rx="2" fill="#444441"/>
-          <rect x="12" y="57" width="12" height="5"  rx="2" fill="#1a1a18"/>
-          <rect x="24" y="57" width="12" height="5"  rx="2" fill="#2C2C2A"/>
-        </svg>
+        <svg width="48" height="64" viewBox="0 0 48 64"><rect x="14" y="1" width="20" height="4" rx="1" fill="#0C447C"/><rect x="14" y="3" width="20" height="18" rx="3" fill="#F5C4B3"/><rect x="18" y="9" width="4" height="4" rx="1" fill="#1a1a18"/><rect x="26" y="9" width="4" height="4" rx="1" fill="#1a1a18"/><rect x="19" y="10" width="1" height="1" fill="white"/><rect x="27" y="10" width="1" height="1" fill="white"/><rect x="20" y="16" width="8" height="2" rx="1" fill="#D85A30"/><rect x="13" y="21" width="22" height="20" rx="2" fill="#378ADD"/><rect x="13" y="34" width="22" height="4" fill="#0C447C"/><rect x="7" y="21" width="7" height="18" rx="3" fill="#378ADD"/><rect x="34" y="21" width="7" height="18" rx="3" fill="#378ADD"/><rect x="14" y="41" width="9" height="18" rx="2" fill="#2C2C2A"/><rect x="25" y="41" width="9" height="18" rx="2" fill="#444441"/><rect x="12" y="57" width="12" height="5" rx="2" fill="#1a1a18"/><rect x="24" y="57" width="12" height="5" rx="2" fill="#2C2C2A"/></svg>
       </div>
-      <div class="char-name">Rekrut</div>
-      <div class="char-level">LVL 1 · Gratis</div>
+      <div class="char-name" data-en="Recruit" data-de="Rekrut">Recruit</div>
+      <div class="char-level" data-en="LVL 1 · Free" data-de="LVL 1 · Gratis">LVL 1 · Free</div>
     </div>
     <div class="char-card">
       <div class="idle" style="animation-delay:0.2s">
-        <svg width="48" height="64" viewBox="0 0 48 64">
-          <rect x="14" y="1"  width="20" height="4"  rx="1" fill="#085041"/>
-          <rect x="14" y="3"  width="20" height="18" rx="3" fill="#F5C4B3"/>
-          <rect x="18" y="9"  width="4"  height="4"  rx="1" fill="#1a1a18"/>
-          <rect x="26" y="9"  width="4"  height="4"  rx="1" fill="#1a1a18"/>
-          <rect x="19" y="10" width="1"  height="1"  fill="white"/>
-          <rect x="27" y="10" width="1"  height="1"  fill="white"/>
-          <rect x="20" y="16" width="8"  height="2"  rx="1" fill="#D85A30"/>
-          <rect x="13" y="21" width="22" height="20" rx="2" fill="#1D9E75"/>
-          <rect x="13" y="34" width="22" height="4"  fill="#085041"/>
-          <rect x="7"  y="21" width="7"  height="18" rx="3" fill="#1D9E75"/>
-          <rect x="34" y="21" width="7"  height="18" rx="3" fill="#1D9E75"/>
-          <rect x="41" y="14" width="3"  height="22" rx="1" fill="#B4B2A9"/>
-          <rect x="38" y="21" width="9"  height="2"  rx="1" fill="#FAC775"/>
-          <rect x="14" y="41" width="9"  height="18" rx="2" fill="#2C2C2A"/>
-          <rect x="25" y="41" width="9"  height="18" rx="2" fill="#444441"/>
-          <rect x="12" y="57" width="12" height="5"  rx="2" fill="#1a1a18"/>
-          <rect x="24" y="57" width="12" height="5"  rx="2" fill="#2C2C2A"/>
-        </svg>
+        <svg width="48" height="64" viewBox="0 0 48 64"><rect x="14" y="1" width="20" height="4" rx="1" fill="#085041"/><rect x="14" y="3" width="20" height="18" rx="3" fill="#F5C4B3"/><rect x="18" y="9" width="4" height="4" rx="1" fill="#1a1a18"/><rect x="26" y="9" width="4" height="4" rx="1" fill="#1a1a18"/><rect x="20" y="16" width="8" height="2" rx="1" fill="#D85A30"/><rect x="13" y="21" width="22" height="20" rx="2" fill="#1D9E75"/><rect x="13" y="34" width="22" height="4" fill="#085041"/><rect x="7" y="21" width="7" height="18" rx="3" fill="#1D9E75"/><rect x="34" y="21" width="7" height="18" rx="3" fill="#1D9E75"/><rect x="41" y="14" width="3" height="22" rx="1" fill="#B4B2A9"/><rect x="38" y="21" width="9" height="2" rx="1" fill="#FAC775"/><rect x="14" y="41" width="9" height="18" rx="2" fill="#2C2C2A"/><rect x="25" y="41" width="9" height="18" rx="2" fill="#444441"/><rect x="12" y="57" width="12" height="5" rx="2" fill="#1a1a18"/><rect x="24" y="57" width="12" height="5" rx="2" fill="#2C2C2A"/></svg>
       </div>
-      <div class="char-name">Kämpfer</div>
+      <div class="char-name" data-en="Fighter" data-de="Kämpfer">Fighter</div>
       <div class="char-level">LVL 2</div>
     </div>
     <div class="char-card">
       <div class="idle" style="animation-delay:0.4s">
-        <svg width="48" height="64" viewBox="0 0 48 64">
-          <rect x="16" y="0"  width="16" height="5"  rx="1" fill="#FAC775"/>
-          <rect x="18" y="-2" width="3"  height="4"  rx="1" fill="#FAC775"/>
-          <rect x="23" y="-3" width="3"  height="5"  rx="1" fill="#FAC775"/>
-          <rect x="28" y="-2" width="3"  height="4"  rx="1" fill="#FAC775"/>
-          <rect x="14" y="3"  width="20" height="18" rx="3" fill="#F5C4B3"/>
-          <rect x="18" y="9"  width="4"  height="4"  rx="1" fill="#1a1a18"/>
-          <rect x="26" y="9"  width="4"  height="4"  rx="1" fill="#1a1a18"/>
-          <rect x="19" y="10" width="1"  height="1"  fill="white"/>
-          <rect x="27" y="10" width="1"  height="1"  fill="white"/>
-          <rect x="20" y="16" width="8"  height="2"  rx="1" fill="#D85A30"/>
-          <rect x="13" y="21" width="22" height="20" rx="2" fill="#7F77DD"/>
-          <rect x="13" y="34" width="22" height="4"  fill="#3C3489"/>
-          <rect x="7"  y="21" width="7"  height="18" rx="3" fill="#7F77DD"/>
-          <rect x="34" y="21" width="7"  height="18" rx="3" fill="#7F77DD"/>
-          <rect x="41" y="14" width="3"  height="22" rx="1" fill="#B4B2A9"/>
-          <rect x="38" y="21" width="9"  height="2"  rx="1" fill="#FAC775"/>
-          <rect x="2"  y="25" width="8"  height="10" rx="2" fill="#3C3489"/>
-          <rect x="4"  y="27" width="4"  height="6"  rx="1" fill="#7F77DD"/>
-          <rect x="14" y="41" width="9"  height="18" rx="2" fill="#2C2C2A"/>
-          <rect x="25" y="41" width="9"  height="18" rx="2" fill="#444441"/>
-          <rect x="12" y="57" width="12" height="5"  rx="2" fill="#1a1a18"/>
-          <rect x="24" y="57" width="12" height="5"  rx="2" fill="#2C2C2A"/>
-        </svg>
+        <svg width="48" height="64" viewBox="0 0 48 64"><rect x="16" y="0" width="16" height="5" rx="1" fill="#FAC775"/><rect x="18" y="-2" width="3" height="4" rx="1" fill="#FAC775"/><rect x="23" y="-3" width="3" height="5" rx="1" fill="#FAC775"/><rect x="28" y="-2" width="3" height="4" rx="1" fill="#FAC775"/><rect x="14" y="3" width="20" height="18" rx="3" fill="#F5C4B3"/><rect x="18" y="9" width="4" height="4" rx="1" fill="#1a1a18"/><rect x="26" y="9" width="4" height="4" rx="1" fill="#1a1a18"/><rect x="20" y="16" width="8" height="2" rx="1" fill="#D85A30"/><rect x="13" y="21" width="22" height="20" rx="2" fill="#7F77DD"/><rect x="13" y="34" width="22" height="4" fill="#3C3489"/><rect x="7" y="21" width="7" height="18" rx="3" fill="#7F77DD"/><rect x="34" y="21" width="7" height="18" rx="3" fill="#7F77DD"/><rect x="41" y="14" width="3" height="22" rx="1" fill="#B4B2A9"/><rect x="2" y="25" width="8" height="10" rx="2" fill="#3C3489"/><rect x="14" y="41" width="9" height="18" rx="2" fill="#2C2C2A"/><rect x="25" y="41" width="9" height="18" rx="2" fill="#444441"/><rect x="12" y="57" width="12" height="5" rx="2" fill="#1a1a18"/><rect x="24" y="57" width="12" height="5" rx="2" fill="#2C2C2A"/></svg>
       </div>
-      <div class="char-name">Ritter</div>
-      <div class="char-level">LVL 4 · Premium</div>
+      <div class="char-name" data-en="Knight · Premium" data-de="Ritter · Premium">Knight · Premium</div>
+      <div class="char-level">LVL 4</div>
     </div>
     <div class="char-card locked">
       <div class="idle" style="animation-delay:0.6s">
-        <svg width="48" height="64" viewBox="0 0 48 64">
-          <rect x="14" y="3"  width="20" height="18" rx="3" fill="#F5C4B3"/>
-          <rect x="18" y="9"  width="4"  height="4"  rx="1" fill="#1a1a18"/>
-          <rect x="26" y="9"  width="4"  height="4"  rx="1" fill="#1a1a18"/>
-          <rect x="13" y="21" width="22" height="20" rx="2" fill="#D4537E"/>
-          <rect x="13" y="34" width="22" height="4"  fill="#4B1528"/>
-          <rect x="7"  y="21" width="7"  height="18" rx="3" fill="#D4537E"/>
-          <rect x="34" y="21" width="7"  height="18" rx="3" fill="#D4537E"/>
-          <rect x="14" y="41" width="9"  height="18" rx="2" fill="#2C2C2A"/>
-          <rect x="25" y="41" width="9"  height="18" rx="2" fill="#444441"/>
-          <rect x="12" y="57" width="12" height="5"  rx="2" fill="#1a1a18"/>
-          <rect x="24" y="57" width="12" height="5"  rx="2" fill="#2C2C2A"/>
-        </svg>
+        <svg width="48" height="64" viewBox="0 0 48 64"><rect x="14" y="3" width="20" height="18" rx="3" fill="#F5C4B3"/><rect x="18" y="9" width="4" height="4" rx="1" fill="#1a1a18"/><rect x="26" y="9" width="4" height="4" rx="1" fill="#1a1a18"/><rect x="13" y="21" width="22" height="20" rx="2" fill="#D4537E"/><rect x="13" y="34" width="22" height="4" fill="#4B1528"/><rect x="7" y="21" width="7" height="18" rx="3" fill="#D4537E"/><rect x="34" y="21" width="7" height="18" rx="3" fill="#D4537E"/><rect x="14" y="41" width="9" height="18" rx="2" fill="#2C2C2A"/><rect x="25" y="41" width="9" height="18" rx="2" fill="#444441"/><rect x="12" y="57" width="12" height="5" rx="2" fill="#1a1a18"/><rect x="24" y="57" width="12" height="5" rx="2" fill="#2C2C2A"/></svg>
       </div>
-      <div class="char-name">Legende</div>
+      <div class="char-name" data-en="Legend" data-de="Legende">Legend</div>
       <div class="char-level">🔒 LVL 7</div>
     </div>
   </div>
 </section>
 
-<!-- HOW IT WORKS -->
 <section class="how" id="how">
-  <div class="section-label">So funktioniert's</div>
-  <h2 class="section-title">In 3 Schritten zur<br>besseren Version von dir</h2>
+  <div class="section-label" data-en="How it works" data-de="So funktioniert's">How it works</div>
+  <h2 class="section-title" data-en="3 steps to a<br>better version of you" data-de="In 3 Schritten zur<br>besseren Version von dir">3 steps to a<br>better version of you</h2>
   <div class="steps">
     <div class="step" data-num="1">
       <span class="step-icon">📋</span>
-      <h3>Gewohnheiten anlegen</h3>
-      <p>Erstelle deine täglichen Quests – von Sport über Lesen bis Meditation. Kategorisiere sie und leg los.</p>
+      <h3 data-en="Add habits" data-de="Gewohnheiten anlegen">Add habits</h3>
+      <p data-en="Create your daily quests – from exercise to reading to meditation. Categorize them and get started." data-de="Erstelle deine täglichen Quests – von Sport über Lesen bis Meditation. Kategorisiere sie und leg los.">Create your daily quests – from exercise to reading to meditation. Categorize them and get started.</p>
     </div>
     <div class="step" data-num="2">
       <span class="step-icon">⚔️</span>
-      <h3>Täglich abhaken</h3>
-      <p>Hake erledigte Quests ab und sammle XP. Je länger dein Streak, desto mehr Bonuspunkte gibt es.</p>
+      <h3 data-en="Check them off daily" data-de="Täglich abhaken">Check them off daily</h3>
+      <p data-en="Complete quests and earn XP. The longer your streak, the more bonus points you get." data-de="Hake erledigte Quests ab und sammle XP. Je länger dein Streak, desto mehr Bonuspunkte gibt es.">Complete quests and earn XP. The longer your streak, the more bonus points you get.</p>
     </div>
     <div class="step" data-num="3">
       <span class="step-icon">⬆️</span>
-      <h3>Level aufsteigen</h3>
-      <p>Dein Pixel-Held wächst mit dir. Schalte neue Rüstungen, Waffen und Charaktere frei.</p>
+      <h3 data-en="Level up" data-de="Level aufsteigen">Level up</h3>
+      <p data-en="Your pixel hero grows with you. Unlock new armor, weapons and characters." data-de="Dein Pixel-Held wächst mit dir. Schalte neue Rüstungen, Waffen und Charaktere frei.">Your pixel hero grows with you. Unlock new armor, weapons and characters.</p>
     </div>
   </div>
 </section>
 
-<!-- FEATURES -->
 <section class="features" id="features">
   <div class="section-label">Features</div>
-  <h2 class="section-title" style="color:white; margin-bottom:3rem;">Alles was du brauchst,<br><em style="color:var(--amber-m); font-style:italic;">nichts was du nicht brauchst</em></h2>
+  <h2 class="section-title" style="color:white; margin-bottom:3rem;" data-en="Everything you need,<br><em style='color:var(--amber-m);font-style:italic;'>nothing you don't</em>" data-de="Alles was du brauchst,<br><em style='color:var(--amber-m);font-style:italic;'>nichts was du nicht brauchst</em>">Everything you need,<br><em style="color:var(--amber-m);font-style:italic;">nothing you don't</em></h2>
   <div class="features-grid">
-    <div class="feature">
-      <span class="feature-icon">🎮</span>
-      <h3>XP & Level-System</h3>
-      <p>Jede abgehakte Gewohnheit gibt Erfahrungspunkte. Streaks geben Bonuspunkte. Steige durch 8 Level auf.</p>
-    </div>
-    <div class="feature">
-      <span class="feature-icon">🔥</span>
-      <h3>Streak-Tracker</h3>
-      <p>Sieh wie viele Tage du eine Gewohnheit in Folge eingehalten hast. Nichts motiviert mehr als ein langer Streak.</p>
-    </div>
-    <div class="feature">
-      <span class="feature-icon">☁️</span>
-      <h3>Cloud-Sync</h3>
-      <p>Deine Daten sind sicher in der Cloud gespeichert. Auf jedem Gerät verfügbar, immer aktuell.</p>
-    </div>
-    <div class="feature">
-      <span class="feature-icon">🧙</span>
-      <h3>Pixel-Charaktere</h3>
-      <p>Dein Held verändert sich mit dir. Von Rekrut bis Legende – jedes Level bringt neue Ausrüstung.</p>
-    </div>
-    <div class="feature">
-      <span class="feature-icon">🏷️</span>
-      <h3>Kategorien</h3>
-      <p>Organisiere deine Quests nach Gesundheit, Lernen, Mindset und Kreativität.</p>
-    </div>
-    <div class="feature">
-      <span class="feature-icon">📱</span>
-      <h3>Überall verfügbar</h3>
-      <p>Funktioniert im Browser auf Desktop und Handy. Keine App-Installation nötig.</p>
-    </div>
+    <div class="feature"><span class="feature-icon">🎮</span><h3 data-en="XP & Level System" data-de="XP & Level-System">XP & Level System</h3><p data-en="Every completed habit gives XP. Streaks give bonus points. Level up through 8 stages." data-de="Jede abgehakte Gewohnheit gibt XP. Streaks geben Bonuspunkte. Steige durch 8 Level auf.">Every completed habit gives XP. Streaks give bonus points. Level up through 8 stages.</p></div>
+    <div class="feature"><span class="feature-icon">🔥</span><h3 data-en="Streak Tracker" data-de="Streak-Tracker">Streak Tracker</h3><p data-en="See how many days in a row you've kept a habit. Nothing motivates like a long streak." data-de="Sieh wie viele Tage du eine Gewohnheit in Folge eingehalten hast. Nichts motiviert mehr als ein langer Streak.">See how many days in a row you've kept a habit. Nothing motivates like a long streak.</p></div>
+    <div class="feature"><span class="feature-icon">🛡️</span><h3 data-en="Streak Shield" data-de="Streak-Schutz">Streak Shield</h3><p data-en="Premium users get 1 shield per month to repair a missed day and protect their streak." data-de="Premium-Nutzer bekommen 1 Schild pro Monat um einen verpassten Tag zu reparieren.">Premium users get 1 shield per month to repair a missed day and protect their streak.</p></div>
+    <div class="feature"><span class="feature-icon">🧙</span><h3 data-en="Pixel Characters" data-de="Pixel-Charaktere">Pixel Characters</h3><p data-en="Your hero changes with you. From recruit to legend – every level brings new gear." data-de="Dein Held verändert sich mit dir. Von Rekrut bis Legende – jedes Level bringt neue Ausrüstung.">Your hero changes with you. From recruit to legend – every level brings new gear.</p></div>
+    <div class="feature"><span class="feature-icon">☁️</span><h3 data-en="Cloud Sync" data-de="Cloud-Sync">Cloud Sync</h3><p data-en="Your data is safely stored in the cloud. Available on every device, always up to date." data-de="Deine Daten sind sicher in der Cloud gespeichert. Auf jedem Gerät verfügbar, immer aktuell.">Your data is safely stored in the cloud. Available on every device, always up to date.</p></div>
+    <div class="feature"><span class="feature-icon">📊</span><h3 data-en="Weekly Overview" data-de="Wochen-Übersicht">Weekly Overview</h3><p data-en="A visual calendar shows which days you were active and how many habits you completed." data-de="Ein visueller Kalender zeigt welche Tage du aktiv warst und wie viele Gewohnheiten du erledigt hast.">A visual calendar shows which days you were active and how many habits you completed.</p></div>
   </div>
 </section>
 
-<!-- PRICING -->
 <section class="pricing" id="pricing">
-  <div class="section-label">Preise</div>
-  <h2 class="section-title">Einfach. Transparent.<br>Fair.</h2>
+  <div class="section-label" data-en="Pricing" data-de="Preise">Pricing</div>
+  <h2 class="section-title" data-en="Simple. Transparent.<br>Fair." data-de="Einfach. Transparent.<br>Fair.">Simple. Transparent.<br>Fair.</h2>
   <div class="pricing-grid">
     <div class="pricing-card">
-      <div class="plan-name">GRATIS</div>
+      <div class="plan-name" data-en="FREE" data-de="GRATIS">FREE</div>
       <div class="plan-price">0€</div>
-      <div class="plan-period">für immer kostenlos</div>
+      <div class="plan-period" data-en="free forever" data-de="für immer kostenlos">free forever</div>
       <ul class="plan-features">
-        <li>Bis zu 3 Gewohnheiten</li>
-        <li>XP & Level-System</li>
-        <li>Streak-Tracker</li>
-        <li>Rekrut-Charakter</li>
-        <li class="locked">Premium-Charaktere</li>
-        <li class="locked">Unlimitierte Quests</li>
+        <li data-en="Up to 3 habits" data-de="Bis zu 3 Gewohnheiten">Up to 3 habits</li>
+        <li data-en="XP & level system" data-de="XP & Level-System">XP & level system</li>
+        <li data-en="Streak tracker" data-de="Streak-Tracker">Streak tracker</li>
+        <li data-en="Recruit character" data-de="Rekrut-Charakter">Recruit character</li>
+        <li class="locked" data-en="Premium characters" data-de="Premium-Charaktere">Premium characters</li>
+        <li class="locked" data-en="Unlimited quests" data-de="Unlimitierte Quests">Unlimited quests</li>
       </ul>
-      <a href="https://habitquest-umber.vercel.app" class="btn-secondary" style="width:100%; text-align:center; display:block;">Kostenlos starten</a>
+      <a href="https://habitquest-umber.vercel.app" class="btn-secondary" style="width:100%;text-align:center;display:block;" data-en="Start for free" data-de="Kostenlos starten">Start for free</a>
     </div>
     <div class="pricing-card featured">
-      <div class="featured-badge">✦ EMPFOHLEN</div>
+      <div class="featured-badge" data-en="✦ RECOMMENDED" data-de="✦ EMPFOHLEN">✦ RECOMMENDED</div>
       <div class="plan-name">PREMIUM</div>
       <div class="plan-price">4,99€</div>
-      <div class="plan-period">pro Monat · jederzeit kündbar</div>
+      <div class="plan-period" data-en="per month · cancel anytime" data-de="pro Monat · jederzeit kündbar">per month · cancel anytime</div>
       <ul class="plan-features">
-        <li>Unlimitierte Gewohnheiten</li>
-        <li>XP & Level-System</li>
-        <li>Streak-Tracker</li>
-        <li>Alle 8 Pixel-Charaktere</li>
-        <li>Premium-Support</li>
-        <li>Neue Features zuerst</li>
+        <li data-en="Unlimited habits" data-de="Unlimitierte Gewohnheiten">Unlimited habits</li>
+        <li data-en="XP & level system" data-de="XP & Level-System">XP & level system</li>
+        <li data-en="Streak tracker" data-de="Streak-Tracker">Streak tracker</li>
+        <li data-en="All 8 pixel characters" data-de="Alle 8 Pixel-Charaktere">All 8 pixel characters</li>
+        <li data-en="1x streak shield/month" data-de="1x Streak-Schutz/Monat">1x streak shield/month</li>
+        <li data-en="New features first" data-de="Neue Features zuerst">New features first</li>
       </ul>
-      <a href="https://habitquest-umber.vercel.app" class="btn-primary" style="width:100%; text-align:center; display:block;">Premium starten ✦</a>
+      <a href="https://habitquest-umber.vercel.app" class="btn-primary" style="width:100%;text-align:center;display:block;" data-en="Start Premium ✦" data-de="Premium starten ✦">Start Premium ✦</a>
     </div>
   </div>
 </section>
 
-<!-- CTA -->
 <section class="cta-section">
-  <h2>Bereit für dein Abenteuer?</h2>
-  <p>Kostenlos starten. Keine Kreditkarte. Keine Ausreden.</p>
-  <a href="https://habitquest-umber.vercel.app" class="btn-primary">QUEST STARTEN ▶</a>
+  <h2 data-en="Ready for your adventure?" data-de="Bereit für dein Abenteuer?">Ready for your adventure?</h2>
+  <p data-en="Start for free. No credit card. No excuses." data-de="Kostenlos starten. Keine Kreditkarte. Keine Ausreden.">Start for free. No credit card. No excuses.</p>
+  <a href="https://habitquest-umber.vercel.app" class="btn-primary" data-en="START QUEST ▶" data-de="QUEST STARTEN ▶">START QUEST ▶</a>
 </section>
 
-<!-- FOOTER -->
 <footer>
-  <p>© 2026 HabitQuest · <a href="https://habitquest-umber.vercel.app" style="color:var(--amber); text-decoration:none;">App öffnen</a></p>
+  <p>© 2026 HabitQuest · <a href="https://habitquest-umber.vercel.app" style="color:var(--amber);text-decoration:none;" data-en="Open App" data-de="App öffnen">Open App</a></p>
 </footer>
 
+<script>
+  const savedLang = localStorage.getItem('hq_lang') || 'en'
+  setLang(savedLang)
+
+  function setLang(lang) {
+    localStorage.setItem('hq_lang', lang)
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.textContent === lang.toUpperCase())
+    })
+    document.querySelectorAll('[data-' + lang + ']').forEach(el => {
+      el.innerHTML = el.getAttribute('data-' + lang)
+    })
+    document.documentElement.lang = lang
+  }
+</script>
 </body>
 </html>
